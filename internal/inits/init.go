@@ -1,3 +1,12 @@
+// Package inits implements a utility that loads the environment config file (~/.s3p).
+//
+// The package will verify that the necessary directories (referred to as libs) exist and are
+// accessible. If not, the package will create the paths. There are three possible fatal failures
+// when using this package.
+//
+// If the user's home directory cannot be determined using os.UserHomeDir(), then a fatal failure occurs.
+// If loose loading does not work, then a fatal failure is returned.
+// If the INI file cannot be saved, then a fatal failure is returned.
 package inits
 
 import (
@@ -27,8 +36,15 @@ What will be in the INI file?
 - etc/s3p
 */
 
+const (
+	defaultAuthPath   = "s3p/auth/"
+	defaultPlanPath   = "s3p/plan/"
+	defaultConfigPath = "s3p/config"
+)
+
 // the ini filename (<homedir>/.s3p - i.e. /Users/admin/.s3p)
 var iniFileName string
+var homePath string
 
 type Init struct {
 	AuthPath   string // the location where auth files will be stored (/etc/s3p/auth/)
@@ -41,21 +57,31 @@ func Retrieve() Init {
 	if err != nil {
 		log.Fatal(err)
 	}
+	homePath = home
 
 	iniFileName = filepath.Join(home, ".s3p")
 
-	// LooseLoad does not throw an error if the file does not exist
-	// If the file does not exist, the default values are set in withDefaults()
-	// and then a new ini file is saved.
-	cfg, err := ini.LooseLoad(iniFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// LoadSources is used to pass specific load options. 'Loose' prevents the LoadSources from
+	// throwing an error if the target file does not exist. 'Insensitive' ignores the case of
+	// sections and keys. 'SkipUnrecognizableLines' ignores lines that aren't key/value pairs.
+	cfg, err := ini.LoadSources(ini.LoadOptions{
+		Loose:                   true,
+		Insensitive:             true,
+		SkipUnrecognizableLines: true,
+	}, iniFileName)
 
-	return withDefaults(cfg)
+	init := withDefaults(cfg)
+
+	// create the library paths if they do not exist
+	// config file is not checked here, it can be created when the app loads the file
+	makeLibsExist(init)
+
+	return init
 }
 
 func withDefaults(cfg *ini.File) Init {
+	changed := false
+
 	init := Init{
 		AuthPath:   cfg.Section("Paths").Key("auth").String(),
 		PlanPath:   cfg.Section("Paths").Key("plan").String(),
@@ -63,19 +89,25 @@ func withDefaults(cfg *ini.File) Init {
 	}
 
 	if strings.TrimSpace(init.AuthPath) == "" {
-		init.AuthPath = "/etc/s3p/auth/"
+		init.AuthPath = filepath.Join(homePath, defaultAuthPath)
 		cfg.Section("Paths").Key("auth").SetValue(init.AuthPath)
+		changed = true
 	}
 	if strings.TrimSpace(init.PlanPath) == "" {
-		init.PlanPath = "/etc/s3p/plan/"
+		init.PlanPath = filepath.Join(homePath, defaultPlanPath)
 		cfg.Section("Paths").Key("plan").SetValue(init.PlanPath)
+		changed = true
 	}
 	if strings.TrimSpace(init.ConfigPath) == "" {
-		init.ConfigPath = "/etc/s3p/config"
+		init.ConfigPath = filepath.Join(homePath, defaultConfigPath)
 		cfg.Section("Paths").Key("config").SetValue(init.ConfigPath)
+		changed = true
 	}
 
-	saveOut(cfg)
+	// if changes are made to the config, then save them
+	if changed {
+		saveOut(cfg)
+	}
 
 	return init
 }

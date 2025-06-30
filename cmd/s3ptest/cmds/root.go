@@ -52,7 +52,12 @@ func init() {
 	// Starts a goroutine that listens for interrupts (ctrl+c)
 	utils.SigIntListener()
 
+	fmt.Printf("s3p\n\n")
+
 	// Load INI file
 	cfg := inits.Retrieve()
+
 	fmt.Printf("%+v\n", cfg)
+
+	fmt.Println()
 }
