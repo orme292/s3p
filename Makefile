@@ -10,7 +10,10 @@ build: install
 
 run: build
 
-test: install build
+runtests: install build
 	@go test -v ./internal/conf
 	@go test -v ./internal/distlog
 	@./bin/mac/s3p use -f "test/configs/aws.yaml"
+
+test: install
+	@go run cmd/s3ptest/main.go
