@@ -19,6 +19,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.23.0
 	google.golang.org/api v0.214.0
+	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -87,5 +88,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241209162323-e6fa225c2576 // indirect
 	google.golang.org/grpc v1.67.3 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
 )
