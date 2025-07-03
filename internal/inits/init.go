@@ -10,12 +10,12 @@
 package inits
 
 import (
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
+    "log"
+    "os"
+    "path/filepath"
+    "strings"
 
-	"gopkg.in/ini.v1"
+    "gopkg.in/ini.v1"
 )
 
 /*
@@ -37,9 +37,9 @@ What will be in the INI file?
 */
 
 const (
-	defaultAuthPath   = "s3p/auth/"
-	defaultPlanPath   = "s3p/plan/"
-	defaultConfigPath = "s3p/config"
+    defaultAuthPath   = "s3p/auth/"
+    defaultPlanPath   = "s3p/plan/"
+    defaultConfigPath = "s3p/config"
 )
 
 // the ini filename (<homedir>/.s3p - i.e. /Users/admin/.s3p)
@@ -47,74 +47,74 @@ var iniFileName string
 var homePath string
 
 type Init struct {
-	AuthPath   string // the location where auth files will be stored (/etc/s3p/auth/)
-	PlanPath   string // the location where plan files will be stored (/etc/s3p/plan/)
-	ConfigPath string // the location of the default s3p configuration file (/etc/s3p/config)
+    AuthPath   string // the location where auth files will be stored (/etc/s3p/auth/)
+    PlanPath   string // the location where plan files will be stored (/etc/s3p/plan/)
+    ConfigPath string // the location of the default s3p configuration file (/etc/s3p/config)
 }
 
 func Retrieve() Init {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	homePath = home
+    home, err := os.UserHomeDir()
+    if err != nil {
+        log.Fatal(err)
+    }
+    homePath = home
 
-	iniFileName = filepath.Join(home, ".s3p")
+    iniFileName = filepath.Join(home, ".s3p")
 
-	// LoadSources is used to pass specific load options. 'Loose' prevents the LoadSources from
-	// throwing an error if the target file does not exist. 'Insensitive' ignores the case of
-	// sections and keys. 'SkipUnrecognizableLines' ignores lines that aren't key/value pairs.
-	cfg, err := ini.LoadSources(ini.LoadOptions{
-		Loose:                   true,
-		Insensitive:             true,
-		SkipUnrecognizableLines: true,
-	}, iniFileName)
+    // LoadSources is used to pass specific load options. 'Loose' prevents the LoadSources from
+    // throwing an error if the target file does not exist. 'Insensitive' ignores the case of
+    // sections and keys. 'SkipUnrecognizableLines' ignores lines that aren't key/value pairs.
+    cfg, err := ini.LoadSources(ini.LoadOptions{
+        Loose:                   true,
+        Insensitive:             true,
+        SkipUnrecognizableLines: true,
+    }, iniFileName)
 
-	init := withDefaults(cfg)
+    init := withDefaults(cfg)
 
-	// create the library paths if they do not exist
-	// config file is not checked here, it can be created when the app loads the file
-	makeLibsExist(init)
+    // create the library paths if they do not exist
+    // config file is not checked here, it can be created when the app loads the file
+    makeLibsExist(init)
 
-	return init
+    return init
 }
 
 func withDefaults(cfg *ini.File) Init {
-	changed := false
+    changed := false
 
-	init := Init{
-		AuthPath:   cfg.Section("Paths").Key("auth").String(),
-		PlanPath:   cfg.Section("Paths").Key("plan").String(),
-		ConfigPath: cfg.Section("Paths").Key("config").String(),
-	}
+    init := Init{
+        AuthPath:   cfg.Section("Paths").Key("auth").String(),
+        PlanPath:   cfg.Section("Paths").Key("plan").String(),
+        ConfigPath: cfg.Section("Paths").Key("config").String(),
+    }
 
-	if strings.TrimSpace(init.AuthPath) == "" {
-		init.AuthPath = filepath.Join(homePath, defaultAuthPath)
-		cfg.Section("Paths").Key("auth").SetValue(init.AuthPath)
-		changed = true
-	}
-	if strings.TrimSpace(init.PlanPath) == "" {
-		init.PlanPath = filepath.Join(homePath, defaultPlanPath)
-		cfg.Section("Paths").Key("plan").SetValue(init.PlanPath)
-		changed = true
-	}
-	if strings.TrimSpace(init.ConfigPath) == "" {
-		init.ConfigPath = filepath.Join(homePath, defaultConfigPath)
-		cfg.Section("Paths").Key("config").SetValue(init.ConfigPath)
-		changed = true
-	}
+    if strings.TrimSpace(init.AuthPath) == "" {
+        init.AuthPath = filepath.Join(homePath, defaultAuthPath)
+        cfg.Section("Paths").Key("auth").SetValue(init.AuthPath)
+        changed = true
+    }
+    if strings.TrimSpace(init.PlanPath) == "" {
+        init.PlanPath = filepath.Join(homePath, defaultPlanPath)
+        cfg.Section("Paths").Key("plan").SetValue(init.PlanPath)
+        changed = true
+    }
+    if strings.TrimSpace(init.ConfigPath) == "" {
+        init.ConfigPath = filepath.Join(homePath, defaultConfigPath)
+        cfg.Section("Paths").Key("config").SetValue(init.ConfigPath)
+        changed = true
+    }
 
-	// if changes are made to the config, then save them
-	if changed {
-		saveOut(cfg)
-	}
+    // if changes are made to the config, then save them
+    if changed {
+        saveOut(cfg)
+    }
 
-	return init
+    return init
 }
 
 func saveOut(cfg *ini.File) {
-	err := cfg.SaveTo(iniFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
+    err := cfg.SaveTo(iniFileName)
+    if err != nil {
+        log.Fatal(err)
+    }
 }
