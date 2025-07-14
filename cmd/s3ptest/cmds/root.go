@@ -6,7 +6,10 @@ import (
 
     "github.com/spf13/cobra"
     "s3p/cmd/s3ptest/cmds/auth"
+    "s3p/cmd/s3ptest/cmds/download"
     "s3p/cmd/s3ptest/cmds/plan"
+    "s3p/cmd/s3ptest/cmds/sync"
+    "s3p/cmd/s3ptest/cmds/upload"
     "s3p/cmd/s3ptest/utils"
     "s3p/internal/inits"
 )
@@ -38,13 +41,13 @@ func addCommands() {
         ID:    "commands",
         Title: "Storage Commands:",
     })
-    rootCmd.AddCommand(downloadCmd)
-    rootCmd.AddCommand(syncCmd)
-    rootCmd.AddCommand(uploadCmd)
+    rootCmd.AddCommand(download.GetDownloadCmd())
+    rootCmd.AddCommand(sync.GetSyncCmd())
+    rootCmd.AddCommand(upload.GetUploadCmd())
 }
 
 func addFlags() {
-    return
+    rootCmd.PersistentFlags().Bool("debug", false, "enable debug mode")
 }
 
 func init() {
@@ -52,11 +55,12 @@ func init() {
     rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
     addCommands()
+    addFlags()
 
     // Starts a goroutine that listens for interrupts (ctrl+c)
     utils.SigIntListener()
 
-    fmt.Printf("\033[1;36m%s\033[0m\n\n", "s3p -a multi-service object storage tool")
+    fmt.Printf("\033[1;36m%s\033[0m\n\n", "s3p - a multi-service object storage tool")
 
     // Load INI file
     _ = inits.Retrieve()
