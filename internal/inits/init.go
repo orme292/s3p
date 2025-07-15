@@ -50,6 +50,8 @@ type Init struct {
     AuthPath   string // the location where auth files will be stored (/etc/s3p/auth/)
     PlanPath   string // the location where plan files will be stored (/etc/s3p/plan/)
     ConfigPath string // the location of the default s3p configuration file (/etc/s3p/config)
+
+    DevMode bool // whether DevMode is active
 }
 
 func Retrieve() Init {
@@ -86,6 +88,7 @@ func withDefaults(cfg *ini.File) Init {
         AuthPath:   cfg.Section("Paths").Key("auth").String(),
         PlanPath:   cfg.Section("Paths").Key("plan").String(),
         ConfigPath: cfg.Section("Paths").Key("config").String(),
+        DevMode:    cfg.Section("DevMode").Key("enabled").MustBool(false),
     }
 
     if strings.TrimSpace(init.AuthPath) == "" {
