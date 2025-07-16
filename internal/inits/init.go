@@ -91,6 +91,17 @@ func withDefaults(cfg *ini.File) Init {
         DevMode:    cfg.Section("DevMode").Key("enabled").MustBool(false),
     }
 
+    // If there is a "DevMode" section with an "enabled" key/value, then we read it.
+    // Otherwise, DevMode is ignored and does not exist.
+    if cfg.HasSection("DevMode") {
+        if cfg.Section("DevMode").HasKey("enabled") {
+            init.DevMode = cfg.Section("DevMode").Key("enabled").MustBool(true)
+        }
+    }
+
+    // If the Paths.auth, Paths.plan, or Paths.config fields are empty, then we set
+    // them to the default, and add each one to the ini object (cfg).
+    // changed is set to true so that the new defaults are written out to the file.
     if strings.TrimSpace(init.AuthPath) == "" {
         init.AuthPath = filepath.Join(homePath, defaultAuthPath)
         cfg.Section("Paths").Key("auth").SetValue(init.AuthPath)
@@ -107,7 +118,7 @@ func withDefaults(cfg *ini.File) Init {
         changed = true
     }
 
-    // if changes are made to the config, then save them
+    // If changes are made to the config, then save them.
     if changed {
         saveOut(cfg)
     }
@@ -115,6 +126,7 @@ func withDefaults(cfg *ini.File) Init {
     return init
 }
 
+// Save changes to the ini file.
 func saveOut(cfg *ini.File) {
     err := cfg.SaveTo(iniFileName)
     if err != nil {
