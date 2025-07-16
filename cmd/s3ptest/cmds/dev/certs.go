@@ -1,7 +1,6 @@
 package dev
 
 import (
-    "fmt"
     "log"
 
     "github.com/spf13/cobra"
@@ -14,17 +13,13 @@ var certsCmd = &cobra.Command{
     Use:   "certs",
     Short: "Certificate commands",
     Long:  "Certificate commands",
-    Run:   useCerts,
 }
 
 func getCertsCmd() *cobra.Command {
     certsCmd.AddCommand(genPairCmd)
     certsCmd.AddCommand(cmpPairCmd)
+    certsCmd.AddCommand(genPairEnc)
     return certsCmd
-}
-
-func useCerts(cmd *cobra.Command, args []string) {
-    fmt.Println("dev.certs called")
 }
 
 // certs.gen-pair test output
@@ -102,4 +97,30 @@ var genPairEnc = &cobra.Command{
 
 func useGenPairEnc(cmd *cobra.Command, args []string) {
     u.PrintFatal("DEV - %s\n\n", u.GreenString("Generate a certificate and test encryption/decryption functions:"))
+
+    certs, err := filecrypto.CreateCertificate(4096)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    s := "THIS IS A TEST STRING"
+    u.PrintFatal("Test data:\n%s\n\n", s)
+
+    enc, err := filecrypto.Encrypt(certs, []byte(s))
+    if err != nil {
+        log.Fatal(err)
+    }
+    u.PrintFatal("Encrypting Text: \n%x\n\n", enc)
+
+    dec, err := filecrypto.Decrypt(certs, enc)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    u.PrintFatal("Decrypting Text: \n%s\n\n", string(dec))
+    if string(dec) == s {
+        u.PrintFatal("%s\n", u.GreenString("PASS"))
+        return
+    }
+    u.PrintFatal("%s\n", u.RedString("FAIL"))
 }
